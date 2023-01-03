@@ -2,7 +2,6 @@
  * build.gradle
  *
  * Copyright by toolarium-jer, all rights reserved.
- * MIT License: https://mit-license.org
  */
 plugins {
   id 'com.github.johnrengelman.shadow' version '7.0.0'
@@ -14,7 +13,36 @@ apply from: "https://raw.githubusercontent.com/toolarium/common-gradle-build/mas
 /***************************************************************************************
  * define the main class name
  ***************************************************************************************/
-mainClassName = "com.github.toolarium.jer.MyApplication"
+mainClassName = "com.github.toolarium.jer.Main"
+
+
+// Minimizing an shadow JAR
+def excludedDependenciesGroups = [ //'com.google.code.findbugs'
+]
+def excludedDependenciesArtifacts = [ //'logback-classic', 'jboss-logging'
+]
+
+shadowJar {
+  minimize {
+      exclude(dependency('org.fusesource.jansi:.*:.*'))
+      exclude(dependency('ch.qos.logback:.*:.*'))
+  }
+
+  dependencies {
+      exclude(dependency {
+            if (excludedDependenciesGroups.contains(it.moduleGroup) || excludedDependenciesArtifacts.contains(it.moduleName)) {
+                logInfo("> Exclude dependency ["+it.moduleName+"]/["+it.moduleGroup + "]")
+                return true;
+            }
+            logInfo("> Keep dependency ["+it.moduleName+"]/["+it.moduleGroup + "]")
+            return false
+       })
+    }
+}
+
+compileJava {
+    options.compilerArgs += ["-Aproject=${project.group}/${project.name}"]
+}
 
 
 /****************************************************************************************
@@ -23,11 +51,16 @@ mainClassName = "com.github.toolarium.jer.MyApplication"
 dependencies {
     // see https://docs.gradle.org/current/userguide/java_library_plugin.html
 
-    // utilities    
-    //implementation "net.sf.jptools:jptools:1.7.7"
-    //implementation "net.sf.jptools:jptools:1.7.7:slf4j-redirect"
-
     // logging
     implementation 'org.slf4j:slf4j-api:1.7.30'
-    implementation 'ch.qos.logback:logback-classic:1.2.3'
+    implementation 'ch.qos.logback:logback-classic:1.2.11'
+    implementation "com.github.toolarium:toolarium-system-command:0.1.0"
+
+
+    // CLI
+    // https://mvnrepository.com/artifact/org.fusesource.jansi/jansi
+    implementation 'org.fusesource.jansi:jansi:2.4.0'
+
+    implementation 'info.picocli:picocli:4.7.0'
+    annotationProcessor 'info.picocli:picocli-codegen:4.7.0'
 }
