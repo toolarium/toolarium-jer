@@ -46,6 +46,8 @@ public final class Main implements Runnable {
     private String jarResourcePath;
     private ColorScheme colorSchema = Help.defaultColorScheme(Help.Ansi.AUTO);
     private ProcessStartInformation processStartInformation;
+    private String jarFilename;
+    private JarExtractor jarExtractor;
 
     
     /**
@@ -55,6 +57,8 @@ public final class Main implements Runnable {
      */
     private Main(String[] args) {
         processStartInformation = new ProcessStartInformation(args);
+        jarFilename = getJarFileName();
+        jarExtractor = new JarExtractor();
     }
 
     
@@ -85,14 +89,17 @@ public final class Main implements Runnable {
      * @see java.lang.Runnable#run()
      */
     public void run() {
+        if (jarFilename == null || jarFilename.isBlank()) {
+            LOG.error("Could not detect the jar file name, ending.");
+            return;
+        }
+        if (jarResource == null || jarResource.isBlank()) {
+            LOG.error("No jar resource found, ending.");
+            return;
+        }
+        
         try {
-            File desitionationFile = new JarExtractor().extract(destination, getJarFileName(), jarResourcePath, overwrite);
-            
-            if (jarResource == null || jarResource.isBlank()) {
-                LOG.error("No jar resource found, ending.");
-                return;
-            }
-            
+            File desitionationFile = jarExtractor.extract(destination, jarFilename, jarResourcePath, overwrite);
             LOG.info("Start command: " + processStartInformation.getCommandLine(jarResource, false, false, false, true));
             String command = processStartInformation.getCommandLine(jarResource, false, false, false, false);      
             ISystemCommandExecuter executer = SystemCommandExecuterBuilder.create()
@@ -104,8 +111,11 @@ public final class Main implements Runnable {
             
             process.waitFor();
             
+        } catch (IllegalAccessException e) {
+            LOG.error("Can not access to [" + jarFilename + "]!", e);
         } catch (Exception e) {
-            LOG.warn("Could not exatract archive: " + e.getMessage(), e);
+            jarExtractor.cleanUp();
+            LOG.error("Could not extract archive: " + e.getMessage(), e);
         }
     }
     

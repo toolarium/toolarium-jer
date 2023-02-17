@@ -29,7 +29,19 @@ import org.slf4j.LoggerFactory;
  */
 public class JarExtractor {
     private static final Logger LOG = LoggerFactory.getLogger(JarExtractor.class);
+    private File desitionationFile;
+    private boolean createdPath;
 
+    
+    /**
+     * Constructor for JarExtractor
+     */
+    public JarExtractor() {
+        desitionationFile = null;
+        createdPath = false;
+        
+    }
+    
     
     /**
      * Extract file
@@ -47,12 +59,12 @@ public class JarExtractor {
         JarFile jar = new JarFile(filename);
         
         try {
-            File desitionationFile = prepareDestinationPath(jarfile, destination);
+            desitionationFile = prepareDestinationPath(jarfile, destination);
             if (!overwrite && desitionationFile.exists()) {
                 LOG.info(".: Already exist [" + desitionationFile + "]!");
                 return desitionationFile;
             }
-            desitionationFile.mkdirs();
+            createdPath = desitionationFile.mkdirs();
 
             Enumeration<JarEntry> enumEntries = jar.entries();
             while (enumEntries.hasMoreElements()) {
@@ -70,7 +82,10 @@ public class JarExtractor {
                 }
             }
             return desitionationFile;
-            
+        } catch (IOException e) {
+            LOG.warn("Could not exatract archive: " + e.getMessage(), e);
+            cleanUp();
+            throw e;
         } finally {
             try {
                 jar.close();
@@ -88,7 +103,7 @@ public class JarExtractor {
      * @return the file
      * @throws IllegalAccessException In case the file can not be accessed
      */
-    private File validateFilename(String filename) throws IllegalAccessException {
+    public File validateFilename(String filename) throws IllegalAccessException {
         if (filename == null) {
             throw new IllegalAccessException("Invalid setup.");
         }
@@ -101,6 +116,18 @@ public class JarExtractor {
     }
 
 
+    /**
+     * Cleanup
+     */
+    public void cleanUp() {
+        if (createdPath && desitionationFile != null) {
+            if (!desitionationFile.delete()) {
+                desitionationFile.deleteOnExit();
+            }
+        }
+    }
+
+    
     /**
      * Create the destination Path
      * 
