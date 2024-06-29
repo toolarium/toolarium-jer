@@ -52,15 +52,14 @@ dependencies {
     // see https://docs.gradle.org/current/userguide/java_library_plugin.html
 
     // logging
-    implementation 'org.slf4j:slf4j-api:1.7.30'
-    implementation 'ch.qos.logback:logback-classic:1.2.11'
+    implementation "org.slf4j:slf4j-api:${commonGradleSlf4jApiVersion}"
+    implementation "ch.qos.logback:logback-classic:${commonGradleLogbackVersion}"
     implementation "com.github.toolarium:toolarium-system-command:0.1.0"
-
 
     // CLI
     // https://mvnrepository.com/artifact/org.fusesource.jansi/jansi
-    implementation 'org.fusesource.jansi:jansi:2.4.0'
+    implementation 'org.fusesource.jansi:jansi:2.4.1'
 
-    implementation 'info.picocli:picocli:4.7.0'
-    annotationProcessor 'info.picocli:picocli-codegen:4.7.0'
+    implementation 'info.picocli:picocli:4.7.6'
+    annotationProcessor 'info.picocli:picocli-codegen:4.7.6'
 }
